@@ -1,0 +1,34 @@
+*{
+  margin:0; padding: 0; border: 0;
+}
+html, body{
+  width: 100%; height: 100%;
+  background-color: #15232D;
+  color: #f0f8fa;
+  font-family: sans-serif;
+}
+#main{
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+#main > div{
+  flex-grow: 1;
+  flex-basis: 0;
+}
+#previewContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#preview{
+  /* Box classic size */
+  max-width: 550px;
+  max-height: 600px;
+  height: 100%; width: 100%;
+  box-shadow:
+  0 -6px 16px rgba(240, 248, 250, 0.1),
+  0 6px 16px rgba(240, 248, 250, 0.1);
+  border-radius: 6px;
+}
