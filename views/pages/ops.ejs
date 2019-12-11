@@ -9,37 +9,39 @@
 
   <div id="app">
     <div id="navbarOps">
-      <input type="text">
-      <i id="newOp" @click="addOp = true">+</i>
+      <input type="text" id="searchInput" placeholder=" " ref="searchInput" v-model="searchItem">
+      <i id="searchIcon" @click="searchIconClick"></i>
+      <i id="newOp" @click="addOp = true"></i>
     </div>
     <div id="opsList">
       <div class="op">
-        <div>is Live?</div>
+        <div class="isLive">is Live?</div>
         <div>Name</div>
-        <div>Dates</div>
-        <div>edit</div>
+        <div>Starting Date</div>
+        <div>Ending Date</div>
+      </div>
+      <div class="op" v-for="op in ops">
+        <div class="isLive">o</div>
+        <div>{{op.name}}</div>
+        <div>{{op.startDate||'unset'}}</div>
+        <div>{{op.startDate||'unset'}}</div>
+        <div class="edit">edit</div>
       </div>
     </div>
     <div id="newOpForm" v-if="addOp">
-
-      <form id="form" autocomplete="off" action="/newOp" method="post">
-        <div>name</div>
-        <input
-          type="text"
-          name="opName"
-          v-model="newOpName"
-          :class="{error: !nameOk}"
-          class="textInput"
-        >
-        <span v-if="!nameOk">This operation already exist</span>
-        <div>dates</div>
-        <input type="date" name="startDate" value="">
-        <input type="date" name="endDate" value="">
-
-        <input type="submit" ref="send" class="hidden">
-      </form>
+      <div>name</div>
+      <input
+        type="text"
+        name="opName"
+        v-model="form.name"
+        :class="{error: !nameOk}"
+        class="textInput"
+      >
+      <span v-if="!nameOk">{{form.name === ''? 'Please enter a name':'This operation already exist'}}</span>
+      <div>dates</div>
+      <input type="date" name="startDate" v-model="form.startDate">
+      <input type="date" name="endDate" v-model="form.endDate">
       <button @click="submitForm">Send</button>
-
     </div>
   </div>
 

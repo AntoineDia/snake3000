@@ -13,7 +13,7 @@ app
   .use(bodyParser.urlencoded({ extended: false }))
   .use(bodyParser.json())
 
-  .get('/configure/:opName', (req, res) => {
+  .get('/configure/:name', (req, res) => {
     res.render('pages/configure')
   })
   .get('/box', (req, res) => {
@@ -25,9 +25,9 @@ app
         res.render('pages/ops', {ops})
       })
   })
-  .get('/checkDuplicate/:opName', (req, res) => {
-    const { opName } = req.params
-    opHandler.getOp(opName)
+  .get('/checkDuplicate/:name', (req, res) => {
+    const { name } = req.params
+    opHandler.getOp(name)
       .then(op => res.json({freeName: !op.ok}))
   })
   .get('/', (req, res) => {
@@ -36,9 +36,8 @@ app
   .post('/newOp', (req, res) => {
     const params = req.body
     opHandler.newOp(params)
-      .then((opName) => {
-        const link = '/configure/' + opName
-        res.redirect(link)
+      .then((op) => {
+        res.json(op)
       })
   })
 

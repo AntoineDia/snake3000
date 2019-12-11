@@ -2,38 +2,59 @@ const app = new Vue({
   el: '#app',
   data() {
     return {
+      ops,
       nameOk: true,
       newOpName: '',
       debounced: true,
       addOp: false,
+      searchItem: '',
+      form:{
+        name: '',
+        startDate: '',
+        endDate: ''
+      }
     }
   },
   watch: {
-    newOpName(){
-      if(this.newOpName === '') return
-      const dico = ' abcdefghijklmnopqrstuvwxyz0123456789-'.split('')
-      this.newOpName = this.newOpName
-        .split('')
-        .map(c =>  c.toLowerCase())
-        .filter((c, i) => !!~dico.indexOf(c))
-        .join('')
-        .toUpperCase()
-      this.debounced ? setTimeout(this.checkOp, 500) : ''
-      this.debounced = false
+    form: {
+      deep: true,
+      handler(){
+        this.nameOk = true
+        if(this.form.name === '') return
+        const dico = ' abcdefghijklmnopqrstuvwxyz0123456789-'.split('')
+        this.form.name = this.form.name
+          .split('')
+          .map(c =>  c.toLowerCase())
+          .filter(c => !!~dico.indexOf(c))
+          .join('')
+          .toUpperCase()
+        this.debounced ? setTimeout(this.checkOp, 500) : ''
+        this.debounced = false
+      }
     }
   },
   methods: {
     checkOp(){
       this.debounced = true
       this.$http
-        .get('/checkDuplicate/' + this.newOpName.toLowerCase())
+        .get('/checkDuplicate/' + this.form.name.toLowerCase())
         .then(res => this.nameOk = res.data.freeName)
     },
     submitForm(){
       if(!this.debounced) return setTimeout(this.submitForm, 500)
+      if(this.form.name === '') return this.nameOk = false
       if(this.nameOk){
-        this.$refs.send.click()
+        this.$http
+          .post('/newOp/', this.form)
+          .then(res => {
+            this.$set(ops, ops.length, res.data)
+            Object.keys(this.form)
+              .forEach(field => this.form[field] = '')
+          })
       }
-    }
-  },
+    },
+    searchIconClick(){
+      if(this.searchItem === '') this.$refs.searchInput.focus()
+    },
+  }
 })

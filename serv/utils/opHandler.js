@@ -18,13 +18,25 @@ const opHandler = {
         (err, data) => {
           let resp = {}
           if(data === undefined) resp.ok = false
-          else resp = {...data, ok: true}
+          else resp = {...JSON.parse(data), ok: true}
           resolve(resp)
         }
       )
     )
   },
   getOps(){
+    return new Promise(resolve => {
+      this.getOpsName()
+        .then(ops => {
+          const fetch = ops.map(this.getOp)
+          const results = Promise.all(fetch)
+          results.then(data => {
+            resolve(data)
+          })
+        })
+    })
+  },
+  getOpsName(){
     return new Promise(resolve => getDir()
       .then(files =>
         resolve(files.map(file => file.split('.')[0])||null)
@@ -32,12 +44,12 @@ const opHandler = {
     )
   },
   newOp(params){
-    const file = opPath + '/' + params.opName.toLowerCase() + '.json'
+    const file = opPath + '/' + params.name.toLowerCase() + '.json'
     const data = JSON.stringify(params)
     return new Promise(resolve => {
       fs.writeFile(file, data, err => {
         if(err) throw err
-        resolve(params.opName)
+        resolve(params)
       })
     })
   }
