@@ -1,0 +1,48 @@
+<%- include('../parts/head') %>
+  <title>Operations</title>
+  <link rel="stylesheet" href="./static/style/ops.css">
+</head>
+<body>
+<script>
+  const ops = <%- JSON.stringify(ops) %>;
+</script>
+
+  <div id="app">
+    <div id="navbarOps">
+      <input type="text">
+      <i id="newOp" @click="addOp = true">+</i>
+    </div>
+    <div id="opsList">
+      <div class="op">
+        <div>is Live?</div>
+        <div>Name</div>
+        <div>Dates</div>
+        <div>edit</div>
+      </div>
+    </div>
+    <div id="newOpForm" v-if="addOp">
+
+      <form id="form" autocomplete="off" action="/newOp" method="post">
+        <div>name</div>
+        <input
+          type="text"
+          name="opName"
+          v-model="newOpName"
+          :class="{error: !nameOk}"
+          class="textInput"
+        >
+        <span v-if="!nameOk">This operation already exist</span>
+        <div>dates</div>
+        <input type="date" name="startDate" value="">
+        <input type="date" name="endDate" value="">
+
+        <input type="submit" ref="send" class="hidden">
+      </form>
+      <button @click="submitForm">Send</button>
+
+    </div>
+  </div>
+
+<script src="./static/js/ops.js"></script>
+</body>
+</html>

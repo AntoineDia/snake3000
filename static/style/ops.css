@@ -1,0 +1,13 @@
+.hidden{
+  display: none;
+}
+input{
+  outline: 0;
+}
+.textInput{
+  border: 1px solid black;
+}
+.error{
+  border: 1px solid red;
+  color: red;
+}
