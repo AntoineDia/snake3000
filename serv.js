@@ -41,5 +41,4 @@ app
       })
   })
 
-
   .listen(port, () => logs.start(port))

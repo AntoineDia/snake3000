@@ -50,11 +50,15 @@ const app = new Vue({
             this.$set(ops, ops.length, res.data)
             Object.keys(this.form)
               .forEach(field => this.form[field] = '')
+            this.addOp = false
           })
       }
     },
     searchIconClick(){
       if(this.searchItem === '') this.$refs.searchInput.focus()
     },
+    shouldHide(ev){
+      ev.target.id === 'newOpForm' ? this.addOp = false : ''
+    }
   }
 })

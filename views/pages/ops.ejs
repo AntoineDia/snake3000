@@ -20,28 +20,34 @@
         <div>Starting Date</div>
         <div>Ending Date</div>
       </div>
-      <div class="op" v-for="op in ops">
+      <div class="op" v-for="op in ops" @click="expandOp">
         <div class="isLive">o</div>
         <div>{{op.name}}</div>
         <div>{{op.startDate||'unset'}}</div>
         <div>{{op.startDate||'unset'}}</div>
         <div class="edit">edit</div>
+        <iframe :src="/"></iframe>
       </div>
     </div>
-    <div id="newOpForm" v-if="addOp">
-      <div>name</div>
-      <input
-        type="text"
-        name="opName"
-        v-model="form.name"
-        :class="{error: !nameOk}"
-        class="textInput"
-      >
-      <span v-if="!nameOk">{{form.name === ''? 'Please enter a name':'This operation already exist'}}</span>
-      <div>dates</div>
-      <input type="date" name="startDate" v-model="form.startDate">
-      <input type="date" name="endDate" v-model="form.endDate">
-      <button @click="submitForm">Send</button>
+    <div id="newOpForm" v-if="addOp" @click="shouldHide">
+      <div id="form">
+        <label>name</label>
+        <input
+          type="text"
+          name="opName"
+          v-model="form.name"
+          :class="{error: !nameOk}"
+          class="textInput"
+          autocomplete="off"
+        >
+        <span v-if="!nameOk" id="underError"
+        >{{form.name === ''? 'Please enter a name':'This operation already exist'}}</span>
+        <label>Start date</label>
+        <input type="date" name="startDate" v-model="form.startDate">
+        <label>Start date</label>
+        <input type="date" name="endDate" v-model="form.endDate">
+        <button @click="submitForm">Send</button>
+      </div>
     </div>
   </div>
 
