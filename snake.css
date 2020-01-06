@@ -1,0 +1,51 @@
+html, body{
+  margin: 0; padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+*{
+  margin: 0; padding: 0;
+  user-select: none;
+}
+body{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: rgb(242, 246, 240);
+}
+#snakeGame{
+  border: 1px solid rgb(119, 119, 119);
+  width: 95vw;
+  max-width: 650px;
+  height: 95vw;
+  max-height: 650px;
+  border-radius: 10px;
+}
+.button{
+  margin-top: 10px;
+  background-color: rgb(45, 160, 16);
+  color: white;
+  border-radius: 5px;
+  border: none;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 20px;
+  transition: padding .3s;
+}
+.button:active{
+  padding: 13px;
+}
+#score{
+  font-family: monospace;
+  font-size: 20px;
+  text-align: center;
+}
+#test{
+  border: 1px solid black;
+  width: 600px;
+  height: 600px;
+}
+canvas{
+  /* border: 1px solid rgba(0, 174, 255, 0.548); */
+}
