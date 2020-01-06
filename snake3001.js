@@ -218,7 +218,7 @@ var Snake = function(params){
       game.update.caseInterval()
     },
     over: function(){
-      scoreDiv.innerHTML = 'Game Over'
+      scoreDiv.innerHTML += '<br>Game Over'
       window.removeEventListener('keydown', game.buffEvent)
     }
   }
