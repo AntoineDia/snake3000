@@ -3,29 +3,28 @@ var defaultConfig = {
   elId: 'snakeGame',
   debug: true,
   game: {
-    cols: 20, rows: 20,
-    asset: './assets/snake_sprite.png',
+    cols: 12, rows: 12,
+    asset: './assets/snake.png',
   },
   snake: {
-    length: 10,
-    direction: 'Up',
+    length: 2,
+    direction: 'Left',
     //speed in case per second
     speed: 1,
     accelerationPercent: 10,
-    maxSpeed: 5,
+    maxSpeed: 10000,
   },
-  field: {
+  background: {
     color1: 'rgb(142,204,57)',
     color2: 'rgb(167,217,72)',
-    // asset: './assets/snakebg.png',
-    pattern:{
-      w: 8, h: 8
-    }
+    asset: './assets/bg.png',
+    pattern: { x: 8, y: 8 },
+    // asset: undefined,
   }
 }
 
 var Vector = VectorConstructor()
-var directions = {
+var DIRS = {
   Up: new Vector(0, -1),
   Right: new Vector(1, 0),
   Down: new Vector(0, 1),
@@ -33,165 +32,183 @@ var directions = {
 }
 
 function Game(config){
-  var Snake = SnakeConstructor()
-  var Field = FieldConstructor()
-  var speed = config.snake.speed
-  var running = false
-  var debug = config.debug
-  var lastTime = 0
-  var board, canvas, ctx, caseSize, background, snake, holder, apple
+  var SNAKE
+  var DOM = {}
+  var CNV = {}
+  var GAME = {}
+
+  GAME.lastTime = new Date()
+  GAME.running = false
+  GAME.board = new Vector(config.game.cols, config.game.rows)
+  GAME.buffedDir = null
+
   function setup(){
-    board = new Vector(config.game.cols, config.game.rows)
+    DOM.style = document.createElement('style')
+    DOM.style.innerHTML = [
+      '#' + config.elId + '{ height: 100%; position: relative }',
+      '#'+ config.elId + '> canvas',
+        '{ width: 100%; position: absolute; }',
+      '#SnGame { z-index: 2 }',
+      '#SnBg   { z-index: 1 }',
+    ].join('')
 
-    canvas = document.createElement('canvas')
-    canvas.width = 64 * board.x
-    canvas.height = 64 * board.y
-    canvas.style.zIndex = 2
-    canvas.style.width = '100%'
-    canvas.style.position = 'absolute'
+    DOM.SnGame = document.createElement('canvas')
+    DOM.SnGame.id = 'SnGame'
+    DOM.SnGame.width = 64 * GAME.board.x
+    DOM.SnGame.height = 64 * GAME.board.y
 
-    ctx = canvas.getContext('2d')
+    DOM.SnBg = DOM.SnGame.cloneNode()
+    DOM.SnBg.id = 'SnBg'
 
-    caseSize = {
-      w: canvas.width / board.x,
-      h: canvas.height / board.y
+    DOM.holder = document.getElementById(config.elId)
+    DOM.holder.appendChild(DOM.SnGame)
+    DOM.holder.appendChild(DOM.SnBg)
+    DOM.holder.appendChild(DOM.style)
+
+    CNV.ctx = DOM.SnGame.getContext('2d')
+    CNV.bgCtx = DOM.SnBg.getContext('2d')
+    CNV.caseSize = DOM.SnGame.width / GAME.board.x
+    CNV.mainAsset = new Image()
+    CNV.mainAsset.src = config.game.asset
+    CNV.mainAsset.onload = function(){
+      CNV.tileSize = GCD(CNV.mainAsset.width, CNV.mainAsset.height)
+      SNAKE = new (SnakeConstructor())()
+      draw()
     }
-
-    background = canvas.cloneNode()
-    background.style.zIndex = 1
-
-    snake = new Snake(config.snake)
-    new Field(config.field)
-
-    holder = document.getElementById(config.elId)
-    holder.style.position = 'relative'
-    holder.style.height = '100%'
-    holder.appendChild(canvas)
-    holder.appendChild(background)
+    drawBackground()
 
     document.addEventListener('keydown', function(ev){
-      if(debug && ev.code === 'KeyU'){
-        speed += speed * config.snake.accelerationPercent /100
-        console.log(speed)
-      }
-      if(snake.buffedDir !== null) return
+      if(config.debug && ev.key === '+') SNAKE.speedUp()
+      if(GAME.buffedDir !== null) return
       var dir = ev.key.split('Arrow')[1] || ev.key
-      if(directions.hasOwnProperty(dir)){
-        if(!snake.dir.equalTo(directions[dir].inverse()))
-          snake.buffedDir = directions[dir]
+      if(DIRS.hasOwnProperty(dir)){
+        if(!SNAKE.dir.equalTo(DIRS[dir].inverse()))
+          GAME.buffedDir = DIRS[dir]
       }
     })
   }
   function draw(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    snake.draw()
-    if(running) {
-      snake.update()
-      requestAnimationFrame(draw)
+    CNV.ctx.clearRect(0, 0, DOM.SnGame.width, DOM.SnGame.height)
+    SNAKE.update()
+    SNAKE.draw()
+    if(GAME.running) requestAnimationFrame(draw)
+  }
+  function drawBackground(){
+    for(var x = 0; x < GAME.board.x; x++){
+      for(var y = 0; y < GAME.board.y; y++){
+        if((x + y) % 2 === 0) CNV.bgCtx.fillStyle = config.background.color1
+        else CNV.bgCtx.fillStyle = config.background.color2
+        CNV.bgCtx.fillRect(
+          x * CNV.caseSize, y * CNV.caseSize, CNV.caseSize, CNV.caseSize
+        )
+      }
+    }
+    if(config.background.asset){
+      var img = new Image()
+      img.src = config.background.asset
+      img.onload = function(){
+        if(config.background.pattern){
+          var imgSize = new Vector(
+            img.width / config.background.pattern.x,
+            img.height / config.background.pattern.y
+          )
+          DOM.SnBg.width = imgSize.x * GAME.board.x
+          DOM.SnBg.height = imgSize.x * GAME.board.y
+          CNV.bgCtx.fillStyle = CNV.bgCtx.createPattern(img, 'repeat')
+          CNV.bgCtx.fillRect(0, 0, DOM.SnBg.width, DOM.SnBg.height)
+        }
+        else CNV.bgCtx.drawImage(img, 0, 0, DOM.SnBg.width, DOM.SnBg.height)
+      }
     }
   }
   function SnakeConstructor(){
-    function Snake(params){
-      this.speed = params.speed
-      this.dir = directions[params.direction]
-      this.buffedDir = null
-      this.head = new Vector(4.5,4.5)
-      this.body = []
-      this.body[0] = this.head.duplicate()
+    function Snake(){
+      this.speed = config.snake.speed
+      this.dir = DIRS[config.snake.direction]
+      this.head = new Vector(5.5,5.5)
+      this.tail = this.head.sub(this.dir.scale(config.snake.length))
+      this.body = [this.head.duplicate(), this.tail.duplicate()]
+      this.acceleration = config.snake.accelerationPercent / 100
+
+      var canvasBody = document.createElement('canvas')
+      canvasBody.width = CNV.caseSize
+      canvasBody.height = CNV.caseSize
+      canvasBodyCtx = canvasBody.getContext('2d')
+      canvasBodyCtx.drawImage(
+        CNV.mainAsset,
+        CNV.tileSize, 0, CNV.tileSize, CNV.tileSize,
+        0, 0, CNV.caseSize, CNV.caseSize
+      )
+      this.bodyPattern = CNV.ctx.createPattern(canvasBody, 'repeat-x')
     }
 
     Snake.prototype.draw = function(){
-      // var diff = this.body[0].sub(this.head)
-      // console.log(diff)
-      // body
-      ctx.fillStyle = 'black'
-      ctx.fillRect(
-        (this.body[0].x - 0.4) * caseSize.w,
-        (this.body[0].y - 0.4) * caseSize.h,
-        0.8 * caseSize.w,
-        0.8 * caseSize.h
-        // caseSize.w * 0.8, caseSize.h * 0.8
+      var diffVect = this.head.sub(this.tail)
+      var diff = diffVect.magnitude()
+      var angle = Math.atan2(diffVect.y, diffVect.x) * 180 / Math.PI + 180
+
+      var normi = diffVect.normalize()
+      console.log(normi)
+
+      CNV.ctx.save()
+
+      CNV.ctx.translate(
+        (this.head.x - 0.5) * CNV.caseSize,
+        (this.head.y - 0.5) * CNV.caseSize
       )
-      //head
-      ctx.fillStyle = 'blue'
-      ctx.fillRect(
-        (this.head.x - 0.4) * caseSize.w,
-        (this.head.y - 0.4) * caseSize.h,
-        caseSize.w * 0.8, caseSize.h * 0.8
-      )
+
+      CNV.ctx.rotate(angle /180 * Math.PI)
+      CNV.ctx.fillStyle = 'red'
+      CNV.ctx.fillRect(0, 0, CNV.caseSize, CNV.caseSize)
+      CNV.ctx.fillStyle = this.bodyPattern
+      CNV.ctx.fillRect(0, 0, diff * CNV.caseSize, CNV.caseSize)
+      CNV.ctx.restore()
     }
     Snake.prototype.borderCollision = function(vect){
-      if(vect.x < 0) vect.x += board.x
-      else if(vect.x > board.x) vect.x -= board.x
-      else if(vect.y < 0) vect.y += board.y
-      else if(vect.y > board.y) vect.y -= board.y
+      if(vect.x < 0) vect.x += GAME.board.x
+      else if(vect.x > GAME.board.x) vect.x -= GAME.board.x
+      else if(vect.y < 0) vect.y += GAME.board.y
+      else if(vect.y > GAME.board.y) vect.y -= GAME.board.y
     }
     Snake.prototype.update = function(){
-      var timeSince = (new Date() - lastTime) / 1000
-      var acceleration = speed * timeSince
+      var timeSince = (new Date() - GAME.lastTime) / 1000
+      var acceleration = this.speed * timeSince
+      if(!GAME.running) acceleration = 0
       this.head = this.body[0].add(this.dir.scale(acceleration))
+      this.tail = this.body[1].add(this.dir.scale(acceleration))
       this.borderCollision(this.head)
+      this.borderCollision(this.tail)
       if(acceleration > 1){
         var timeDifference = (acceleration - 1) / this.speed * 1000
-        lastTime = new Date() - timeDifference
+        GAME.lastTime = new Date() - timeDifference
         this.body[0] = this.body[0].add(this.dir)
-        if(this.buffedDir !== null){
-          this.dir = this.buffedDir
-          this.buffedDir = null
+        this.body[1] = this.body[1].add(this.dir)
+        if(GAME.buffedDir !== null){
+          this.dir = GAME.buffedDir
+          GAME.buffedDir = null
         }
         this.borderCollision(this.body[0])
+        this.borderCollision(this.body[1])
       }
+    }
+    Snake.prototype.speedUp = function(){
+      this.speed += this.speed * this.acceleration
+      if(this.speed > config.snake.maxSpeed)
+        this.speed = config.snake.maxSpeed
+      console.log(this.speed)
     }
     return Snake
   }
-  function FieldConstructor(){
-    function Field(params){
-      this.color1 = params.color1
-      this.color2 = params.color2
-      if(params.asset){
-        this.asset = new Image()
-        this.asset.src = params.asset
-        this.asset.onload = this.draw()
-      }
-      else{
-        this.drawColors()
-      }
-    }
-    Field.prototype.draw = function(){
-      var ctx = background.getContext('2d')
-      ctx.drawImage(this.asset,0,0,canvas.width,canvas.height)
-      ctx.fillRect(
-        5 * caseSize.w, 5 * caseSize.h,
-        caseSize.w, caseSize.h
-      )
-    }
-    Field.prototype.drawColors = function(){
-      var ctx = background.getContext('2d')
-      for(var x = 0; x < board.x; x++){
-        for(var y = 0; y < board.y; y++){
-          var color = (x + y) % 2 === 0 ? this.color1 : this.color2
-          ctx.fillStyle = color
-          ctx.fillRect(
-            x * caseSize.w, y * caseSize.h,
-            caseSize.w, caseSize.h
-          )
-        }
-      }
-    }
-    return Field
-  }
-  function AppleConstructor(){
-    function Apple(x, y){
-      return new Vector(x, y)
-    }
-  }
+
   setup()
-  draw()
   return ({
     start: function(){
-      lastTime = new Date()
-      running = true
+      GAME.lastTime = new Date()
+      GAME.running = true
       requestAnimationFrame(draw)
+    },
+    getConfig: function(){
+      return config
     }
   })
 }
@@ -219,11 +236,26 @@ function VectorConstructor(){
   Vector.prototype.inverse = function(){
     return new Vector(this.x * -1, this.y * -1)
   }
+  Vector.prototype.positive = function(){
+    return new Vector(Math.abs(this.x),Math.abs(this.y))
+  }
   Vector.prototype.equalTo = function(vect) {
     return this.x === vect.x && this.y === vect.y
   }
   Vector.prototype.duplicate = function(){
     return new Vector(this.x, this.y)
   }
+  Vector.prototype.magnitude = function () {
+    return Math.sqrt(this.x * this.x + this.y * this.y)
+  }
+  Vector.prototype.normalize = function(){
+    return this.scale(1/this.magnitude())
+  }
   return Vector
+}
+
+// Greatest Common Divisor
+function GCD(n1, n2){
+  if(!n2) return n1
+  return GCD(n2, n1 % n2)
 }
